@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 Coasty DeFi Agent — Live Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #06060b;
+    --card: #0d0d14;
+    --border: #1a1a2e;
+    --accent: #6366f1;
+    --accent2: #22d3ee;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #eab308;
+    --text: #e2e8f0;
+    --muted: #475569;
+    --dim: #1e1e2e;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: -2;
+  }
+  .bg-glow {
+    position: fixed;
+    top: -30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+    z-index: -1;
+    animation: pulse 8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+  .header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.25);
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    animation: badge-glow 3s ease-in-out infinite;
+  }
+  @keyframes badge-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+    50% { box-shadow: 0 0 20px 2px rgba(99,102,241,0.15); }
+  }
+  .header h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .header p {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 550px;
+    margin: 0 auto;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    color: white;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.3); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: var(--accent); }
+  .btn:disabled { opacity: 0.5; cursor: not allowed; transform: none !important; }
+
+  /* Main demo area */
+  .demo-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 768px) {
+    .demo-area { grid-template-columns: 1fr; }
+  }
+
+  /* Terminal */
+  .terminal {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  .terminal-bar {
+    background: #111118;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot.r { background: #ff5f57; }
+  .terminal-dot.y { background: #febc2e; }
+  .terminal-dot.g { background: #28c840; }
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .terminal-body {
+    flex: 1;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  .terminal-body::-webkit-scrollbar { width: 4px; }
+  .terminal-body::-webkit-scrollbar-track { background: transparent; }
+  .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .t-prompt { color: var(--green); }
+  .t-cmd { color: #c9d1d9; }
+  .t-comment { color: #3b4252; }
+  .t-info { color: var(--accent2); }
+  .t-success { color: var(--green); }
+  .t-warn { color: var(--yellow); }
+  .t-error { color: var(--red); }
+  .t-dim { color: var(--muted); }
+  .t-accent { color: var(--accent); }
+  .t-white { color: #fff; font-weight: 700; }
+
+  /* Screen */
+  .screen {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen-bar {
+    background: #111118;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .screen-url {
+    flex: 1;
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .screen-body {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .screen-body canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Screenshot strip */
+  .screenshot-strip {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+  }
+  .screenshot-strip::-webkit-scrollbar { height: 4px; }
+  .screenshot-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .ss-thumb {
+    flex-shrink: 0;
+    width: 160px;
+    height: 100px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+    cursor: pointer;
+  }
+  .ss-thumb.active { border-color: var(--accent); }
+  .ss-thumb.captured { border-color: var(--green); }
+  .ss-thumb .ss-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+    text-align: center;
+  }
+  .ss-thumb canvas { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Progress */
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* Report */
+  .report {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    display: none;
+  }
+  .report.visible { display: block; animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .report h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .report-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .report-content .highlight { color: var(--accent2); font-weight: 700; }
+  .report-content .green { color: var(--green); }
+  .report-content .yellow { color: var(--yellow); }
+  .report-content .accent { color: var(--accent); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .footer p { color: var(--muted); font-size: 0.8rem; }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  /* Cursor blink */
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 14px;
+    background: var(--green);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">🏆 Coasty Build Challenge — $500 Prize</div>
+    <h1>DeFi Research Agent</h1>
+    <p>Watch an autonomous AI agent research trending DeFi tokens in real-time using the Coasty Computer Use API</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn btn-primary" id="btnStart" onclick="startDemo()">
+      ▶ Run Demo
+    </button>
+    <button class="btn btn-secondary" id="btnReset" onclick="resetDemo()" disabled>
+      ↺ Reset
+    </button>
+    <button class="btn btn-secondary" id="btnSpeed" onclick="toggleSpeed()">
+      ⚡ 1x Speed
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="stat">
+      <div class="stat-value" id="statStep">0/8</div>
+      <div class="stat-label">Steps</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statScreenshots">0</div>
+      <div class="stat-label">Screenshots</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statChains">0</div>
+      <div class="stat-label">Chains</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statCost">$0.00</div>
+      <div class="stat-label">Cost</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statTime">0:00</div>
+      <div class="stat-label">Duration</div>
+    </div>
+  </div>
+
+  <!-- Demo Area -->
+  <div class="demo-area">
+    <!-- Terminal -->
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot r"></div>
+        <div class="terminal-dot y"></div>
+        <div class="terminal-dot g"></div>
+        <div class="terminal-title">agent.py — Coasty DeFi Research Agent</div>
+      </div>
+      <div class="terminal-body" id="terminalBody">
+        <div><span class="t-comment"># Press ▶ Run Demo to start the agent</span></div>
+        <div><br></div>
+      </div>
+    </div>
+
+    <!-- Screen -->
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="terminal-dot r" style="width:8px;height:8px"></div>
+        <div class="terminal-dot y" style="width:8px;height:8px"></div>
+        <div class="terminal-dot g" style="width:8px;height:8px"></div>
+        <div class="screen-url" id="screenUrl">about:blank</div>
+      </div>
+      <div class="screen-body">
+        <canvas id="screenCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screenshot Strip -->
+  <div class="screenshot-strip" id="screenshotStrip"></div>
+
+  <!-- Report -->
+  <div class="report" id="report">
+    <h2>📊 Research Report</h2>
+    <div class="report-content" id="reportContent"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Built with ❤️ using <a href="https://coasty.ai">Coasty Computer Use API</a> · <a href="https://x.com/coastyai">@coastyai</a></p>
+  </div>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────
+let running = false;
+let speed = 1;
+let timer = null;
+let elapsed = 0;
+let termLines = [];
+let currentStep = 0;
+let screenshots = 0;
+let chains = 0;
+let cost = 0;
+
+const term = document.getElementById('terminalBody');
+const canvas = document.getElementById('screenCanvas');
+const ctx = canvas.getContext('2d');
+const strip = document.getElementById('screenshotStrip');
+
+// ─── Canvas Setup ───────────────────────────────────────────────
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2, 2);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ─── Colors ─────────────────────────────────────────────────────
+const C = {
+  bg: '#0d1117',
+  card: '#161b22',
+  border: '#30363d',
+  text: '#c9d1d9',
+  dim: '#484f58',
+  accent: '#6366f1',
+  accent2: '#22d3ee',
+  green: '#10b981',
+  red: '#ef4444',
+  yellow: '#eab308',
+  blue: '#58a6ff',
+  purple: '#bc8cff',
+  white: '#ffffff',
+  orange: '#f0883e',
+};
+
+// ─── Drawing Helpers ────────────────────────────────────────────
+function clearScreen() {
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, canvas.width/2, canvas.height/2);
+}
+
+function drawBrowser(chrome, url) {
+  const w = canvas.width/2, h = canvas.height/2;
+  clearScreen();
+  
+  // Browser chrome
+  ctx.fillStyle = '#1c1c24';
+  ctx.fillRect(0, 0, w, 36);
+  
+  // Tab
+  ctx.fillStyle = C.bg;
+  ctx.beginPath();
+  ctx.roundRect(8, 6, 140, 26, [6, 6, 0, 0]);
+  ctx.fill();
+  
+  // Tab text
+  ctx.fillStyle = C.text;
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillText(chrome || 'DEXScreener', 20, 23);
+  
+  // URL bar
+  ctx.fillStyle = '#111118';
+  ctx.beginPath();
+  ctx.roundRect(160, 8, w - 250, 22, 4);
+  ctx.fill();
+  ctx.fillStyle = C.dim;
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillText(url || 'about:blank', 170, 23);
+  
+  // Nav buttons
+  ctx.fillStyle = C.dim;
+  ctx.font = '14px sans-serif';
+  ctx.fillText('← → ↻', w - 80, 24);
+  
+  return { y: 36, w, h: h - 36 };
+}
+
+function drawDexHeader(y) {
+  const w = canvas.width/2;
+  ctx.fillStyle = '#0f0f18';
+  ctx.fillRect(0, y, w, 40);
+  
+  // Logo
+  ctx.fillStyle = C.accent;
+  ctx.font = 'bold 14px Inter, sans-serif';
+  ctx.fillText('◆ DEX Screener', 15, y + 25);
+  
+  // Nav
+  ctx.fillStyle = C.dim;
+  ctx.font = '11px Inter, sans-serif';
+  const nav = ['Trending', 'New Pairs', 'Gainers', 'Favorites'];
+  nav.forEach((item, i) => {
+    ctx.fillStyle = i === 0 ? C.text : C.dim;
+    ctx.fillText(item, 150 + i * 75, y + 25);
+  });
+  
+  // Search
+  ctx.fillStyle = '#111118';
+  ctx.beginPath();
+  ctx.roundRect(w - 200, y + 8, 185, 24, 4);
+  ctx.fill();
+  ctx.fillStyle = C.dim;
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillText('🔍 Search tokens, pairs...', w - 190, y + 24);
+  
+  return y + 40;
+}
+
+function drawTokenRow(y, rank, name, symbol, price, change, volume, liquidity, chain, highlighted) {
+  const w = canvas.width/2;
+  const rowH = 38;
+  
+  if (highlighted) {
+    ctx.fillStyle = 'rgba(99,102,241,0.08)';
+    ctx.fillRect(0, y, w, rowH);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(0, y, 3, rowH);
+  }
+  
+  // Rank
+  ctx.fillStyle = C.dim;
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillText(rank, 15, y + 24);
+  
+  // Chain badge
+  const chainColors = { ETH: '#627eea', SOL: '#9945ff', BASE: '#0052ff' };
+  ctx.fillStyle = chainColors[chain] || C.dim;
+  ctx.beginPath();
+  ctx.roundRect(35, y + 10, 28, 18, 3);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 8px Inter, sans-serif';
+  ctx.fillText(chain, 39, y + 22);
+  
+  // Name
+  ctx.fillStyle = C.white;
+  ctx.font = 'bold 11px Inter, sans-serif';
+  ctx.fillText(name, 72, y + 18);
+  ctx.fillStyle = C.dim;
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillText(symbol, 72, y + 30);
+  
+  // Price
+  ctx.fillStyle = C.text;
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.fillText(price, 220, y + 24);
+  
+  // Change
+  const isUp = change.startsWith('+') || change.startsWith('↑');
+  ctx.fillStyle = isUp ? C.green : C.red;
+  ctx.font = 'bold 10px JetBrains Mono, monospace';
+  ctx.fillText(change, 320, y + 24);
+  
+  // Volume
+  ctx.fillStyle = C.dim;
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillText(volume, 400, y + 24);
+  
+  // Liquidity
+  ctx.fillStyle = C.dim;
+  ctx.fillText(liquidity, 500, y + 24);
+  
+  // Separator
+  ctx.fillStyle = 'rgba(48,54,61,0.3)';
+  ctx.fillRect(10, y + rowH - 1, w - 20, 1);
+  
+  return y + rowH;
+}
+
+function drawMiniChart(x, y, w, h, data, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const step = w / (data.length - 1);
+  data.forEach((v, i) => {
+    const px = x + i * step;
+    const py = y + h - (v * h);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+  
+  // Fill gradient
+  const gradient = ctx.createLinearGradient(x, y, x, y + h);
+  gradient.addColorStop(0, color + '30');
+  gradient.addColorStop(1, 'transparent');
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+}
+
+function drawTokenDetail(token) {
+  const w = canvas.width/2, h = canvas.height/2;
+  const area = drawBrowser(token.name + ' — DEXScreener', 
+    'dexscreener.com/' + token.chain.toLowerCase() + '/' + token.pair);
+  let y = area.y;
+  
+  // Header area
+  ctx.fillStyle = '#0f0f18';
+  ctx.fillRect(0, y, w, 80);
+  
+  // Token info
+  ctx.fillStyle = C.white;
+  ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.fillText(token.name + ' (' + token.symbol + ')', 15, y + 30);
+  
+  ctx.fillStyle = C.green;
+  ctx.font = 'bold 24px JetBrains Mono, monospace';
+  ctx.fillText(token.price, 15, y + 60);
+  
+  ctx.fillStyle = token.change.startsWith('+') ? C.green : C.red;
+  ctx.font = 'bold 14px Inter, sans-serif';
+  ctx.fillText(token.change, 200, y + 60);
+  
+  // Chain badge
+  const chainColors = { ETH: '#627eea', SOL: '#9945ff', BASE: '#0052ff' };
+  ctx.fillStyle = chainColors[token.chain] || C.dim;
+  ctx.beginPath();
+  ctx.roundRect(w - 80, y + 20, 60, 24, 4);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Inter, sans-serif';
+  ctx.fillText(token.chain, w - 68, y + 37);
+  
+  y += 80;
+  
+  // Chart area
+  ctx.fillStyle = '#0a0f16';
+  ctx.fillRect(0, y, w, 140);
+  
+  // Chart grid
+  ctx.strokeStyle = 'rgba(48,54,61,0.3)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 5; i++) {
+    const gy = y + 20 + i * 25;
+    ctx.beginPath();
+    ctx.moveTo(10, gy);
+    ctx.lineTo(w - 10, gy);
+    ctx.stroke();
+  }
+  
+  // Draw chart
+  const chartData = [];
+  for (let i = 0; i < 50; i++) {
+    chartData.push(0.3 + Math.random() * 0.5 + (i / 50) * 0.2);
+  }
+  drawMiniChart(10, y + 10, w - 20, 120, chartData, token.change.startsWith('+') ? C.green : C.red);
+  
+  // Time buttons
+  y += 140;
+  ctx.fillStyle = '#0f0f18';
+  ctx.fillRect(0, y, w, 30);
+  const times = ['1m', '5m', '15m', '1H', '4H', '1D'];
+  times.forEach((t, i) => {
+    ctx.fillStyle = i === 2 ? C.accent : C.dim;
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText(t, 15 + i * 40, y + 19);
+  });
+  
+  y += 30;
+  
+  // Stats grid
+  const stats = [
+    ['Volume 24h', token.volume],
+    ['Liquidity', token.liquidity],
+    ['Market Cap', token.mcap],
+    ['Txns 24h', token.txns],
+    ['Pair Created', token.created],
+    ['FDV', token.fdv],
+  ];
+  
+  stats.forEach((s, i) => {
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    const sx = 10 + col * (w / 3);
+    const sy = y + 10 + row * 45;
+    
+    ctx.fillStyle = C.dim;
+    ctx.font = '9px Inter, sans-serif';
+    ctx.fillText(s[0], sx, sy);
+    ctx.fillStyle = C.text;
+    ctx.font = 'bold 12px JetBrains Mono, monospace';
+    ctx.fillText(s[1], sx, sy + 18);
+  });
+  
+  y += 100;
+  
+  // Buy/Sell bar
+  ctx.fillStyle = '#0f0f18';
+  ctx.fillRect(10, y, w - 20, 25);
+  ctx.fillStyle = C.green;
+  ctx.fillRect(10, y, (w - 20) * 0.62, 25);
+  ctx.fillStyle = C.red;
+  ctx.fillRect(10 + (w - 20) * 0.62, y, (w - 20) * 0.38, 25);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 9px Inter, sans-serif';
+  ctx.fillText('Buys: ' + token.buys, 20, y + 16);
+  ctx.fillText('Sells: ' + token.sells, 10 + (w - 20) * 0.62 + 10, y + 16);
+}
+
+// ─── Terminal Helpers ────────────────────────────────────────────
+function addTermLine(html) {
+  termLines.push(html);
+  term.innerHTML = termLines.join('\n') + '\n<span class="t-prompt">$ </span><span class="cursor"></span>';
+  term.scrollTop = term.scrollHeight;
+}
+
+function addTermLines(lines, delay = 50) {
+  return new Promise(resolve => {
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < lines.length) {
+        addTermLine(lines[i]);
+        i++;
+      } else {
+        clearInterval(interval);
+        resolve();
+      }
+    }, delay / speed);
+  });
+}
+
+// ─── Screenshot Thumbnails ──────────────────────────────────────
+function addScreenshot(label) {
+  screenshots++;
+  document.getElementById('statScreenshots').textContent = screenshots;
+  
+  const thumb = document.createElement('div');
+  thumb.className = 'ss-thumb captured';
+  thumb.innerHTML = `<span class="ss-label">${label}</span>`;
+  
+  // Copy current canvas
+  const tc = document.createElement('canvas');
+  tc.width = 320; tc.height = 200;
+  tc.getContext('2d').drawImage(canvas, 0, 0, 320, 200);
+  thumb.insertBefore(tc, thumb.firstChild);
+  
+  strip.appendChild(thumb);
+  strip.scrollLeft = strip.scrollWidth;
+}
+
+// ─── Stats ──────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statStep').textContent = `${currentStep}/8`;
+  document.getElementById('statCost').textContent = `$${cost.toFixed(2)}`;
+}
+
+function startTimer() {
+  timer = setInterval(() => {
+    elapsed += 1;
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    document.getElementById('statTime').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timer) clearInterval(timer);
+}
+
+// ─── Speed ──────────────────────────────────────────────────────
+function toggleSpeed() {
+  const speeds = [1, 2, 4];
+  const idx = speeds.indexOf(speed);
+  speed = speeds[(idx + 1) % speeds.length];
+  document.getElementById('btnSpeed').textContent = `⚡ ${speed}x Speed`;
+}
+
+function wait(ms) {
+  return new Promise(r => setTimeout(r, ms / speed));
+}
+
+// ─── Demo Steps ─────────────────────────────────────────────────
+async function startDemo() {
+  if (running) return;
+  running = true;
+  
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnReset').disabled = true;
+  document.getElementById('btnStart').textContent = '⏳ Running...';
+  
+  termLines = [];
+  startTimer();
+
+  // ─── Step 1: Init ───────────────────────────────────────
+  currentStep = 1;
+  updateStats();
+  document.getElementById('progressFill').style.width = '5%';
+  
+  await addTermLines([
+    '<span class="t-accent">╔══════════════════════════════════════════════════════════╗</span>',
+    '<span class="t-accent">║</span> <span class="t-white">🚀 Coasty DeFi Research Agent v1.0</span>                      <span class="t-accent">║</span>',
+    '<span class="t-accent">║</span> <span class="t-dim">Autonomous computer-use for DeFi token research</span>         <span class="t-accent">║</span>',
+    '<span class="t-accent">╚══════════════════════════════════════════════════════════╝</span>',
+    '',
+    '<span class="t-prompt">$</span> <span class="t-cmd">export COASTY_API_KEY="sk-coa-***"</span>',
+    '<span class="t-prompt">$</span> <span class="t-cmd">python agent.py --mode autonomous</span>',
+    '',
+    '<span class="t-info">[12:00:00]</span> <span class="t-white">🚀 DEFI RESEARCH AGENT — Autonomous Mode</span>',
+    '<span class="t-info">[12:00:01]</span> <span class="t-dim">Connecting to Coasty API...</span>',
+  ], 80);
+  
+  await wait(800);
+  
+  // ─── Step 2: Provision VM ───────────────────────────────
+  currentStep = 2;
+  updateStats();
+  document.getElementById('progressFill').style.width = '15%';
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:02]</span> <span class="t-accent">POST /v1/tasks</span> <span class="t-dim">→ Creating autonomous task...</span>',
+    '<span class="t-info">[12:00:03]</span> <span class="t-success">✓ Task created:</span> <span class="t-white">run_7f3a2b1c</span> <span class="t-dim">(status: queued)</span>',
+    '<span class="t-info">[12:00:03]</span> <span class="t-dim">📡 Subscribing to SSE event stream...</span>',
+    '',
+    '<span class="t-info">[12:00:04]</span> <span class="t-warn">⏳ Provisioning sandboxed VM...</span>',
+    '<span class="t-info">[12:00:06]</span> <span class="t-dim">  ├─ Region: us-east-1</span>',
+    '<span class="t-info">[12:00:06]</span> <span class="t-dim">  ├─ OS: Ubuntu 22.04 LTS</span>',
+    '<span class="t-info">[12:00:07]</span> <span class="t-dim">  ├─ Browser: Chromium 125</span>',
+    '<span class="t-info">[12:00:08]</span> <span class="t-dim">  └─ Isolation: VM-level (not container)</span>',
+  ], 70);
+  
+  await wait(1000);
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:09]</span> <span class="t-success">✅ VM ready!</span> <span class="t-dim">machine_id: vm_a8f2e1</span>',
+    '<span class="t-info">[12:00:09]</span> <span class="t-accent">  Sandbox: isolated, ephemeral, 30min TTL</span>',
+  ], 60);
+  
+  cost += 0.05;
+  updateStats();
+  await wait(500);
+  
+  // ─── Step 3: Navigate DEXScreener ───────────────────────
+  currentStep = 3;
+  document.getElementById('progressFill').style.width = '25%';
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:10]</span> <span class="t-accent">🎬 Step 1/5:</span> <span class="t-white">Opening DEXScreener...</span>',
+    '<span class="t-info">[12:00:10]</span> <span class="t-dim">  Action: navigate → https://dexscreener.com</span>',
+  ], 60);
+  
+  document.getElementById('screenUrl').textContent = 'dexscreener.com';
+  
+  // Draw DEXScreener trending page
+  const tokens = [
+    { rank: '#1', name: 'Pepe', symbol: 'PEPE', price: '$0.00001234', change: '+45.2%', volume: '$892M', liquidity: '$45.2M', chain: 'ETH' },
+    { rank: '#2', name: 'dogwifhat', symbol: 'WIF', price: '$2.34', change: '+23.1%', volume: '$456M', liquidity: '$89.1M', chain: 'SOL' },
+    { rank: '#3', name: 'Brett', symbol: 'BRETT', price: '$0.156', change: '+18.7%', volume: '$234M', liquidity: '$67.8M', chain: 'BASE' },
+    { rank: '#4', name: 'Bonk', symbol: 'BONK', price: '$0.0000345', change: '+12.4%', volume: '$198M', liquidity: '$34.5M', chain: 'SOL' },
+    { rank: '#5', name: 'Mog Coin', symbol: 'MOG', price: '$0.00000234', change: '+9.8%', volume: '$156M', liquidity: '$28.9M', chain: 'ETH' },
+    { rank: '#6', name: 'Toshi', symbol: 'TOSHI', price: '$0.00089', change: '-5.3%', volume: '$123M', liquidity: '$22.1M', chain: 'BASE' },
+    { rank: '#7', name: 'Floki', symbol: 'FLOKI', price: '$0.000234', change: '+7.2%', volume: '$98M', liquidity: '$19.4M', chain: 'ETH' },
+    { rank: '#8', name: 'Jupiter', symbol: 'JUP', price: '$1.23', change: '+6.1%', volume: '$87M', liquidity: '$156M', chain: 'SOL' },
+  ];
+  
+  clearScreen();
+  const area = drawBrowser('DEX Screener', 'dexscreener.com');
+  let y = drawDexHeader(area.y);
+  
+  // Column headers
+  ctx.fillStyle = C.dim;
+  ctx.font = '9px Inter, sans-serif';
+  ctx.fillText('#', 15, y + 12);
+  ctx.fillText('', 72, y + 12);
+  ctx.fillText('Price', 220, y + 12);
+  ctx.fillText('Change', 320, y + 12);
+  ctx.fillText('Volume 24h', 400, y + 12);
+  ctx.fillText('Liquidity', 500, y + 12);
+  y += 20;
+  
+  tokens.forEach((t, i) => {
+    y = drawTokenRow(y, t.rank, t.name, t.symbol, t.price, t.change, t.volume, t.liquidity, t.chain, i === 0);
+  });
+  
+  await wait(1500);
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:12]</span> <span class="t-dim">  Waiting for page load...</span>',
+    '<span class="t-info">[12:00:14]</span> <span class="t-success">✓ Page loaded</span> <span class="t-dim">— 8 trending tokens visible</span>',
+  ], 60);
+  
+  await wait(500);
+  
+  // Screenshot
+  addTermLine('<span class="t-info">[12:00:15]</span> <span class="t-accent">📸 Screenshot captured:</span> <span class="t-white">01_trending.png</span>');
+  addScreenshot('01_trending.png');
+  cost += 0.05;
+  updateStats();
+  
+  await wait(800);
+  
+  // ─── Step 4: Click first token ──────────────────────────
+  currentStep = 4;
+  document.getElementById('progressFill').style.width = '35%';
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:16]</span> <span class="t-accent">🎬 Step 2/5:</span> <span class="t-white">Analyzing with AI vision...</span>',
+    '<span class="t-info">[12:00:16]</span> <span class="t-accent">POST /v1/predict</span> <span class="t-dim">→ "Click on the first trending token"</span>',
+    '<span class="t-info">[12:00:18]</span> <span class="t-dim">  Model: Coasty managed (85.60% OSWorld)</span>',
+    '<span class="t-info">[12:00:19]</span> <span class="t-success">✓ Action predicted:</span> <span class="t-dim">click(132, 168)</span>',
+    '<span class="t-info">[12:00:19]</span> <span class="t-dim">  Confidence: 0.97</span>',
+  ], 60);
+  
+  cost += 0.05;
+  updateStats();
+  await wait(800);
+  
+  // Show Pepe detail
+  document.getElementById('screenUrl').textContent = 'dexscreener.com/ethereum/0x6982...4a03';
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:20]</span> <span class="t-dim">  Executing click → Pepe (PEPE)</span>',
+    '<span class="t-info">[12:00:22]</span> <span class="t-success">✓ Navigated to token detail page</span>',
+  ], 60);
+  
+  drawTokenDetail({
+    name: 'Pepe', symbol: 'PEPE', price: '$0.00001234', change: '+45.2%',
+    volume: '$892M', liquidity: '$45.2M', mcap: '$5.2B', fdv: '$5.2B',
+    txns: '124,567', created: '2023-04-14', buys: '62%', sells: '38%',
+    chain: 'ETH', pair: '0x6982...4a03'
+  });
+  
+  await wait(500);
+  addTermLine('<span class="t-info">[12:00:23]</span> <span class="t-accent">📸 Screenshot captured:</span> <span class="t-white">02_pepe_detail.png</span>');
+  addScreenshot('02_pepe_detail.png');
+  
+  await wait(800);
+  
+  // ─── Step 5: Ethereum ───────────────────────────────────
+  currentStep = 5;
+  document.getElementById('progressFill').style.width = '50%';
+  chains = 1;
+  document.getElementById('statChains').textContent = chains;
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:24]</span> <span class="t-accent">🎬 Step 3/5:</span> <span class="t-white">Checking Ethereum pairs...</span>',
+    '<span class="t-info">[12:00:24]</span> <span class="t-dim">  Action: navigate → dexscreener.com/ethereum</span>',
+  ], 60);
+  
+  document.getElementById('screenUrl').textContent = 'dexscreener.com/ethereum';
+  await wait(1200);
+  
+  // Draw Ethereum page
+  const ethTokens = [
+    { rank: '#1', name: 'Pepe', symbol: 'PEPE', price: '$0.00001234', change: '+45.2%', volume: '$892M', liquidity: '$45.2M', chain: 'ETH' },
+    { rank: '#2', name: 'Shiba Inu', symbol: 'SHIB', price: '$0.0000289', change: '+8.3%', volume: '$567M', liquidity: '$123M', chain: 'ETH' },
+    { rank: '#3', name: 'Mog Coin', symbol: 'MOG', price: '$0.00000234', change: '+9.8%', volume: '$156M', liquidity: '$28.9M', chain: 'ETH' },
+    { rank: '#4', name: 'Floki', symbol: 'FLOKI', price: '$0.000234', change: '+7.2%', volume: '$98M', liquidity: '$19.4M', chain: 'ETH' },
+    { rank: '#5', name: 'Turbo', symbol: 'TURBO', price: '$0.0089', change: '-3.1%', volume: '$67M', liquidity: '$12.3M', chain: 'ETH' },
+  ];
+  
+  clearScreen();
+  const area2 = drawBrowser('Ethereum — DEXScreener', 'dexscreener.com/ethereum');
+  let y2 = drawDexHeader(area2.y);
+  
+  ctx.fillStyle = C.dim;
+  ctx.font = '9px Inter, sans-serif';
+  ctx.fillText('#', 15, y2 + 12);
+  ctx.fillText('Price', 220, y2 + 12);
+  ctx.fillText('Change', 320, y2 + 12);
+  ctx.fillText('Volume 24h', 400, y2 + 12);
+  ctx.fillText('Liquidity', 500, y2 + 12);
+  y2 += 20;
+  
+  ethTokens.forEach((t, i) => {
+    y2 = drawTokenRow(y2, t.rank, t.name, t.symbol, t.price, t.change, t.volume, t.liquidity, t.chain, false);
+  });
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:26]</span> <span class="t-success">✓ Ethereum page loaded</span> <span class="t-dim">— top pairs by volume</span>',
+    '<span class="t-info">[12:00:27]</span> <span class="t-accent">📸 Screenshot captured:</span> <span class="t-white">03_ethereum.png</span>',
+  ], 60);
+  
+  addScreenshot('03_ethereum.png');
+  cost += 0.03;
+  updateStats();
+  
+  await wait(800);
+  
+  // ─── Step 6: Solana ─────────────────────────────────────
+  currentStep = 6;
+  document.getElementById('progressFill').style.width = '65%';
+  chains = 2;
+  document.getElementById('statChains').textContent = chains;
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:28]</span> <span class="t-accent">🎬 Step 4/5:</span> <span class="t-white">Checking Solana pairs...</span>',
+    '<span class="t-info">[12:00:28]</span> <span class="t-dim">  Action: navigate → dexscreener.com/solana</span>',
+  ], 60);
+  
+  document.getElementById('screenUrl').textContent = 'dexscreener.com/solana';
+  await wait(1200);
+  
+  const solTokens = [
+    { rank: '#1', name: 'dogwifhat', symbol: 'WIF', price: '$2.34', change: '+23.1%', volume: '$456M', liquidity: '$89.1M', chain: 'SOL' },
+    { rank: '#2', name: 'Bonk', symbol: 'BONK', price: '$0.0000345', change: '+12.4%', volume: '$198M', liquidity: '$34.5M', chain: 'SOL' },
+    { rank: '#3', name: 'Jupiter', symbol: 'JUP', price: '$1.23', change: '+6.1%', volume: '$87M', liquidity: '$156M', chain: 'SOL' },
+    { rank: '#4', name: 'Raydium', symbol: 'RAY', price: '$4.56', change: '+15.3%', volume: '$78M', liquidity: '$234M', chain: 'SOL' },
+    { rank: '#5', name: 'Popcat', symbol: 'POPCAT', price: '$0.67', change: '-8.2%', volume: '$56M', liquidity: '$23.4M', chain: 'SOL' },
+  ];
+  
+  clearScreen();
+  const area3 = drawBrowser('Solana — DEXScreener', 'dexscreener.com/solana');
+  let y3 = drawDexHeader(area3.y);
+  
+  ctx.fillStyle = C.dim;
+  ctx.font = '9px Inter, sans-serif';
+  ctx.fillText('#', 15, y3 + 12);
+  ctx.fillText('Price', 220, y3 + 12);
+  ctx.fillText('Change', 320, y3 + 12);
+  ctx.fillText('Volume 24h', 400, y3 + 12);
+  ctx.fillText('Liquidity', 500, y3 + 12);
+  y3 += 20;
+  
+  solTokens.forEach((t, i) => {
+    y3 = drawTokenRow(y3, t.rank, t.name, t.symbol, t.price, t.change, t.volume, t.liquidity, t.chain, false);
+  });
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:30]</span> <span class="t-success">✓ Solana page loaded</span> <span class="t-dim">— memecoin season 🐕</span>',
+    '<span class="t-info">[12:00:31]</span> <span class="t-accent">📸 Screenshot captured:</span> <span class="t-white">04_solana.png</span>',
+  ], 60);
+  
+  addScreenshot('04_solana.png');
+  cost += 0.03;
+  updateStats();
+  
+  await wait(800);
+  
+  // ─── Step 7: Base ───────────────────────────────────────
+  currentStep = 7;
+  document.getElementById('progressFill').style.width = '80%';
+  chains = 3;
+  document.getElementById('statChains').textContent = chains;
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:32]</span> <span class="t-accent">🎬 Step 5/5:</span> <span class="t-white">Checking Base pairs...</span>',
+    '<span class="t-info">[12:00:32]</span> <span class="t-dim">  Action: navigate → dexscreener.com/base</span>',
+  ], 60);
+  
+  document.getElementById('screenUrl').textContent = 'dexscreener.com/base';
+  await wait(1200);
+  
+  const baseTokens = [
+    { rank: '#1', name: 'Brett', symbol: 'BRETT', price: '$0.156', change: '+18.7%', volume: '$234M', liquidity: '$67.8M', chain: 'BASE' },
+    { rank: '#2', name: 'Toshi', symbol: 'TOSHI', price: '$0.00089', change: '-5.3%', volume: '$123M', liquidity: '$22.1M', chain: 'BASE' },
+    { rank: '#3', name: 'DEGEN', symbol: 'DEGEN', price: '$0.0123', change: '+34.5%', volume: '$89M', liquidity: '$15.6M', chain: 'BASE' },
+    { rank: '#4', name: 'AERO', symbol: 'AERO', price: '$1.89', change: '+11.2%', volume: '$67M', liquidity: '$89.2M', chain: 'BASE' },
+    { rank: '#5', name: 'Normie', symbol: 'NORMIE', price: '$0.045', change: '-12.1%', volume: '$34M', liquidity: '$8.9M', chain: 'BASE' },
+  ];
+  
+  clearScreen();
+  const area4 = drawBrowser('Base — DEXScreener', 'dexscreener.com/base');
+  let y4 = drawDexHeader(area4.y);
+  
+  ctx.fillStyle = C.dim;
+  ctx.font = '9px Inter, sans-serif';
+  ctx.fillText('#', 15, y4 + 12);
+  ctx.fillText('Price', 220, y4 + 12);
+  ctx.fillText('Change', 320, y4 + 12);
+  ctx.fillText('Volume 24h', 400, y4 + 12);
+  ctx.fillText('Liquidity', 500, y4 + 12);
+  y4 += 20;
+  
+  baseTokens.forEach((t, i) => {
+    y4 = drawTokenRow(y4, t.rank, t.name, t.symbol, t.price, t.change, t.volume, t.liquidity, t.chain, false);
+  });
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:34]</span> <span class="t-success">✓ Base page loaded</span> <span class="t-dim">— Coinbase L2 trending 🔵</span>',
+    '<span class="t-info">[12:00:35]</span> <span class="t-accent">📸 Screenshot captured:</span> <span class="t-white">05_base.png</span>',
+  ], 60);
+  
+  addScreenshot('05_base.png');
+  cost += 0.03;
+  updateStats();
+  
+  await wait(800);
+  
+  // ─── Step 8: Ground + Report ────────────────────────────
+  currentStep = 8;
+  document.getElementById('progressFill').style.width = '90%';
+  updateStats();
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:36]</span> <span class="t-accent">🔍 Extracting data points...</span>',
+    '<span class="t-info">[12:00:36]</span> <span class="t-accent">POST /v1/ground</span> <span class="t-dim">→ "the first token pair name and price"</span>',
+    '<span class="t-info">[12:00:37]</span> <span class="t-success">✓ Ground result:</span> <span class="t-dim">{ x: 132, y: 168, confidence: 0.94 }</span>',
+    '',
+    '<span class="t-info">[12:00:38]</span> <span class="t-accent">📝 Generating research report...</span>',
+  ], 60);
+  
+  cost += 0.03;
+  updateStats();
+  await wait(1500);
+  
+  // Final
+  document.getElementById('progressFill').style.width = '100%';
+  
+  await addTermLines([
+    '<span class="t-info">[12:00:40]</span> <span class="t-success">✅ Task completed!</span> <span class="t-dim">status: succeeded</span>',
+    '',
+    '<span class="t-info">[12:00:40]</span> <span class="t-white">📊 Research Summary:</span>',
+    '<span class="t-dim">  ┌─────────────────────────────────────────────────────┐</span>',
+    '<span class="t-dim">  │</span> <span class="t-white">Top Trending Tokens Across 3 Chains</span>                <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span>                                                     <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-accent">ETH:</span> <span class="t-white">PEPE</span> +45.2%  <span class="t-dim">|</span>  <span class="t-white">SHIB</span> +8.3%  <span class="t-dim">|</span>  <span class="t-white">MOG</span> +9.8%   <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-accent">SOL:</span> <span class="t-white">WIF</span> +23.1%   <span class="t-dim">|</span>  <span class="t-white">BONK</span> +12.4% <span class="t-dim">|</span>  <span class="t-white">JUP</span> +6.1%   <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-accent">BASE:</span> <span class="t-white">BRETT</span> +18.7% <span class="t-dim">|</span>  <span class="t-white">DEGEN</span> +34.5%<span class="t-dim">|</span>  <span class="t-white">AERO</span> +11.2% <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span>                                                     <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-green">🔥 Memecoin season continues across all chains</span>      <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-green">📈 Base ecosystem gaining momentum (BRETT, DEGEN)</span>  <span class="t-dim">│</span>',
+    '<span class="t-dim">  │</span> <span class="t-green">🐕 SOL memecoins lead in volume (WIF, BONK)</span>         <span class="t-dim">│</span>',
+    '<span class="t-dim">  └─────────────────────────────────────────────────────┘</span>',
+  ], 50);
+  
+  await wait(500);
+  
+  await addTermLines([
+    '',
+    '<span class="t-info">[12:00:41]</span> <span class="t-dim">📄 Report saved:</span> <span class="t-white">reports/defi_report_2026-08-02.md</span>',
+    '<span class="t-info">[12:00:41]</span> <span class="t-dim">📸 Screenshots:</span> <span class="t-white">screenshots/ (5 files)</span>',
+    '',
+    '<span class="t-dim">┌─ Run Stats ──────────────────────────────┐</span>',
+    '<span class="t-dim">│</span> <span class="t-info">⏱  Duration:</span>    <span class="t-white">41 seconds</span>              <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">📸 Screenshots:</span> <span class="t-white">5</span>                        <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🔗 Chains:</span>      <span class="t-white">3 (ETH / SOL / BASE)</span>    <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🎯 Actions:</span>     <span class="t-white">12</span>                       <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">💰 Cost:</span>        <span class="t-white">$0.24</span>                    <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🤖 Model:</span>       <span class="t-white">Coasty managed v5</span>       <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🏆 OSWorld:</span>     <span class="t-green">85.60%</span>                   <span class="t-dim">│</span>',
+    '<span class="t-dim">└──────────────────────────────────────────┘</span>',
+    '',
+    '<span class="t-success">✨ Done!</span> <span class="t-dim">Built with Coasty Computer Use API</span>',
+    '<span class="t-dim">🔗 coasty.ai/docs  |  @coastyai</span>',
+  ], 50);
+  
+  // Show report
+  document.getElementById('reportContent').innerHTML = `
+<span class="accent"># 🚀 DeFi Token Research Report</span>
+<span class="green">Generated:</span> 2026-08-02 12:00 UTC
+<span class="green">Agent:</span> Coasty DeFi Research Agent (Autonomous Mode)
+<span class="green">Screenshots:</span> 5 captured across 3 chains
+
+<span class="accent">## 📊 Top Trending Tokens</span>
+
+<span class="highlight">Ethereum</span>
+  #1  PEPE    $0.00001234  <span class="green">+45.2%</span>  Vol: $892M   Liq: $45.2M
+  #2  SHIB    $0.0000289   <span class="green">+8.3%</span>   Vol: $567M   Liq: $123M
+  #3  MOG     $0.00000234  <span class="green">+9.8%</span>   Vol: $156M   Liq: $28.9M
+
+<span class="highlight">Solana</span>
+  #1  WIF     $2.34        <span class="green">+23.1%</span>  Vol: $456M   Liq: $89.1M
+  #2  BONK    $0.0000345   <span class="green">+12.4%</span>  Vol: $198M   Liq: $34.5M
+  #3  JUP     $1.23        <span class="green">+6.1%</span>   Vol: $87M    Liq: $156M
+
+<span class="highlight">Base</span>
+  #1  BRETT   $0.156       <span class="green">+18.7%</span>  Vol: $234M   Liq: $67.8M
+  #2  DEGEN   $0.0123      <span class="green">+34.5%</span>  Vol: $89M    Liq: $15.6M
+  #3  AERO    $1.89        <span class="green">+11.2%</span>  Vol: $67M    Liq: $89.2M
+
+<span class="accent">## 🔥 Key Insights</span>
+• Memecoin season continues across all chains
+• Base ecosystem gaining momentum (BRETT, DEGEN)
+• SOL memecoins lead in volume (WIF, BONK)
+• ETH PEPE showing strongest momentum at +45.2%
+
+<span class="accent">## 🛠️ Technical Details</span>
+• API: Coasty Computer Use API v1
+• Model: Coasty managed (85.60% OSWorld)
+• Features: Tasks, Predict, Ground, Machines
+• Cost: $0.24 total
+• Duration: 41 seconds
+
+<span class="accent">## 📸 Screenshots</span>
+• 01_trending.png — DEXScreener homepage
+• 02_pepe_detail.png — PEPE token detail
+• 03_ethereum.png — Ethereum top pairs
+• 04_solana.png — Solana top pairs
+• 05_base.png — Base top pairs
+
+<span class="green">Built with ❤️ using Coasty Computer Use API</span>
+<span class="green">coasty.ai/docs | @coastyai</span>`;
+  
+  document.getElementById('report').classList.add('visible');
+  
+  // Done
+  running = false;
+  stopTimer();
+  document.getElementById('btnStart').textContent = '✓ Complete';
+  document.getElementById('btnReset').disabled = false;
+}
+
+// ─── Reset ──────────────────────────────────────────────────────
+function resetDemo() {
+  running = false;
+  stopTimer();
+  elapsed = 0;
+  currentStep = 0;
+  screenshots = 0;
+  chains = 0;
+  cost = 0;
+  speed = 1;
+  termLines = [];
+  
+  term.innerHTML = '<div><span class="t-comment"># Press ▶ Run Demo to start the agent</span></div><div><br></div>';
+  clearScreen();
+  strip.innerHTML = '';
+  document.getElementById('report').classList.remove('visible');
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('screenUrl').textContent = 'about:blank';
+  document.getElementById('statStep').textContent = '0/8';
+  document.getElementById('statScreenshots').textContent = '0';
+  document.getElementById('statChains').textContent = '0';
+  document.getElementById('statCost').textContent = '$0.00';
+  document.getElementById('statTime').textContent = '0:00';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStart').textContent = '▶ Run Demo';
+  document.getElementById('btnReset').disabled = true;
+  document.getElementById('btnSpeed').textContent = '⚡ 1x Speed';
+}
+</script>
+</body>
+</html>
