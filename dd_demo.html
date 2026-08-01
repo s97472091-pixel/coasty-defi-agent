@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔍 Coasty Crypto DD Agent — Live Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#06060b;--card:#0d0d14;--border:#1a1a2e;--accent:#6366f1;--accent2:#22d3ee;--green:#10b981;--red:#ef4444;--yellow:#eab308;--text:#e2e8f0;--muted:#475569}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(99,102,241,.03)1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.03)1px,transparent 1px);background-size:60px 60px;z-index:-2}
+  .bg-glow{position:fixed;top:-30%;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(99,102,241,.12)0%,transparent 70%);z-index:-1;animation:pulse 8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.1)}}
+  .container{max-width:1100px;margin:0 auto;padding:1.5rem}
+  .header{text-align:center;padding:3rem 0 2rem}
+  .header .badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);padding:.4rem 1rem;border-radius:999px;font-size:.75rem;font-weight:600;color:var(--accent);margin-bottom:1.5rem}
+  .header h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;background:linear-gradient(135deg,#fff 0%,var(--accent) 50%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin-bottom:1rem}
+  .header p{font-size:1.1rem;color:var(--muted);max-width:600px;margin:0 auto}
+  .controls{display:flex;justify-content:center;gap:1rem;margin:2rem 0;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),#818cf8);color:#fff}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(99,102,241,.3)}
+  .btn-secondary{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:hover{background:rgba(255,255,255,.08);border-color:var(--accent)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+  .progress-bar{width:100%;height:3px;background:var(--border);border-radius:2px;margin-bottom:2rem;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .5s ease;width:0%}
+  .status-bar{display:flex;justify-content:center;gap:2rem;padding:1rem;margin-bottom:2rem;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat-value{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .demo-area{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+  @media(max-width:768px){.demo-area{grid-template-columns:1fr}}
+  .terminal{background:#0a0a12;border:1px solid var(--border);border-radius:12px;overflow:hidden;height:520px;display:flex;flex-direction:column}
+  .terminal-bar{background:#111118;padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid var(--border);flex-shrink:0}
+  .terminal-dot{width:10px;height:10px;border-radius:50%}
+  .terminal-dot.r{background:#ff5f57}.terminal-dot.y{background:#febc2e}.terminal-dot.g{background:#28c840}
+  .terminal-title{flex:1;text-align:center;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .terminal-body{flex:1;padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;line-height:1.7;overflow-y:auto;scroll-behavior:smooth}
+  .terminal-body::-webkit-scrollbar{width:4px}
+  .terminal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+  .t-prompt{color:var(--green)}.t-cmd{color:#c9d1d9}.t-comment{color:#3b4252}.t-info{color:var(--accent2)}.t-success{color:var(--green)}.t-warn{color:var(--yellow)}.t-dim{color:var(--muted)}.t-accent{color:var(--accent)}.t-white{color:#fff;font-weight:700}.t-red{color:var(--red)}
+  .screen{background:#0a0a12;border:1px solid var(--border);border-radius:12px;overflow:hidden;height:520px;display:flex;flex-direction:column}
+  .screen-bar{background:#111118;padding:.6rem 1rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);flex-shrink:0}
+  .screen-url{flex:1;background:#0a0a12;border:1px solid var(--border);border-radius:6px;padding:.3rem .75rem;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .screen-body{flex:1;position:relative;overflow:hidden}
+  .screen-body canvas{width:100%;height:100%}
+  .screenshot-strip{display:flex;gap:.75rem;overflow-x:auto;padding:1rem 0;margin-bottom:2rem}
+  .screenshot-strip::-webkit-scrollbar{height:4px}
+  .screenshot-strip::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+  .ss-thumb{flex-shrink:0;width:160px;height:100px;background:var(--card);border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--muted);position:relative;overflow:hidden;transition:border-color .3s}
+  .ss-thumb.captured{border-color:var(--green)}
+  .ss-thumb .ss-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:.2rem .4rem;font-size:.6rem;text-align:center}
+  .ss-thumb canvas{width:100%;height:100%;object-fit:cover}
+  .report{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:2rem;display:none}
+  .report.visible{display:block;animation:fadeIn .5s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .report h2{font-size:1.3rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+  .report-content{font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.8;color:var(--text);white-space:pre-wrap}
+  .report-content .hl{color:var(--accent2);font-weight:700}
+  .report-content .g{color:var(--green)}
+  .report-content .r{color:var(--red)}
+  .report-content .y{color:var(--yellow)}
+  .report-content .a{color:var(--accent)}
+  .footer{text-align:center;padding:2rem 0;border-top:1px solid var(--border)}
+  .footer p{color:var(--muted);font-size:.8rem}
+  .footer a{color:var(--accent);text-decoration:none}
+  .cursor{display:inline-block;width:7px;height:14px;background:var(--green);animation:blink 1s step-end infinite;vertical-align:middle;margin-left:2px}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0}
+  .risk-card{background:rgba(99,102,241,.05);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+  .risk-card .icon{font-size:2rem;margin-bottom:.5rem}
+  .risk-card h4{font-size:.9rem;margin-bottom:.25rem}
+  .risk-card p{font-size:.75rem;color:var(--muted)}
+  .risk-card.safe{border-color:rgba(16,185,129,.3)}.risk-card.warn{border-color:rgba(234,179,8,.3)}.risk-card.danger{border-color:rgba(239,68,68,.3)}
+  .score-ring{width:80px;height:80px;margin:0 auto .5rem;position:relative}
+  .score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .score-ring circle{fill:none;stroke-width:6}
+  .score-ring .bg{stroke:var(--border)}
+  .score-ring .fg{stroke:var(--green);stroke-linecap:round;transition:stroke-dashoffset 1s ease}
+  .score-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="container">
+  <div class="header">
+    <div class="badge">🏆 Coasty Build Challenge — "Research across live interfaces"</div>
+    <h1>Crypto DD Agent</h1>
+    <p>Autonomous agent that researches crypto projects across 5+ live sources, gathers evidence, and compiles a due diligence report</p>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="btnStart" onclick="startDemo()">▶ Run DD on PEPE</button>
+    <button class="btn btn-secondary" id="btnReset" onclick="resetDemo()" disabled>↺ Reset</button>
+    <button class="btn btn-secondary" id="btnSpeed" onclick="toggleSpeed()">⚡ 1x</button>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="status-bar">
+    <div class="stat"><div class="stat-value" id="statStep">0/5</div><div class="stat-label">Sources</div></div>
+    <div class="stat"><div class="stat-value" id="statSS">0</div><div class="stat-label">Evidence</div></div>
+    <div class="stat"><div class="stat-value" id="statActions">0</div><div class="stat-label">Actions</div></div>
+    <div class="stat"><div class="stat-value" id="statCost">$0.00</div><div class="stat-label">Cost</div></div>
+    <div class="stat"><div class="stat-value" id="statTime">0:00</div><div class="stat-label">Duration</div></div>
+  </div>
+
+  <div class="demo-area">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div>
+        <div class="terminal-title">dd_agent.py — Coasty Crypto DD Agent</div>
+      </div>
+      <div class="terminal-body" id="term">
+        <div><span class="t-comment"># Press ▶ Run DD to start the agent</span></div><div><br></div>
+      </div>
+    </div>
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="terminal-dot r" style="width:8px;height:8px"></div>
+        <div class="terminal-dot y" style="width:8px;height:8px"></div>
+        <div class="terminal-dot g" style="width:8px;height:8px"></div>
+        <div class="screen-url" id="screenUrl">about:blank</div>
+      </div>
+      <div class="screen-body"><canvas id="cv"></canvas></div>
+    </div>
+  </div>
+
+  <div class="screenshot-strip" id="strip"></div>
+
+  <div class="report" id="report">
+    <h2>📋 Due Diligence Report: PEPE</h2>
+    <div class="report-content" id="reportContent"></div>
+  </div>
+
+  <div class="footer">
+    <p>Built with ❤️ using <a href="https://coasty.ai">Coasty Computer Use API</a> · <a href="https://x.com/coastyai">@coastyai</a></p>
+  </div>
+</div>
+
+<script>
+let running=false,speed=1,timer=null,elapsed=0,lines=[],step=0,ss=0,actions=0,cost=0;
+const term=document.getElementById('terminalBody'),cv=document.getElementById('cv'),ctx=cv.getContext('2d'),strip=document.getElementById('strip');
+const C={bg:'#0d1117',card:'#161b22',border:'#30363d',text:'#c9d1d9',dim:'#484f58',accent:'#6366f1',accent2:'#22d3ee',green:'#10b981',red:'#ef4444',yellow:'#eab308',white:'#fff',blue:'#58a6ff',purple:'#bc8cff',orange:'#f0883e'};
+
+function resizeCv(){const r=cv.parentElement.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;ctx.scale(2,2)}
+window.addEventListener('resize',resizeCv);resizeCv();
+
+function clear(){ctx.fillStyle=C.bg;ctx.fillRect(0,0,cv.width/2,cv.height/2)}
+function drawBrowser(title,url){
+  const w=cv.width/2,h=cv.height/2;clear();
+  ctx.fillStyle='#1c1c24';ctx.fillRect(0,0,w,36);
+  ctx.fillStyle=C.bg;ctx.beginPath();ctx.roundRect(8,6,140,26,[6,6,0,0]);ctx.fill();
+  ctx.fillStyle=C.text;ctx.font='10px Inter,sans-serif';ctx.fillText(title||'Browser',20,23);
+  ctx.fillStyle='#111118';ctx.beginPath();ctx.roundRect(160,8,w-250,22,4);ctx.fill();
+  ctx.fillStyle=C.dim;ctx.font='10px JetBrains Mono,monospace';ctx.fillText(url||'about:blank',170,23);
+  ctx.fillStyle=C.dim;ctx.font='14px sans-serif';ctx.fillText('← → ↻',w-80,24);
+  return{y:36,w,h:h-36};
+}
+function drawRow(y,name,chain,price,change,extra,hl){
+  const w=cv.width/2,rh=36;
+  if(hl){ctx.fillStyle='rgba(99,102,241,.08)';ctx.fillRect(0,y,w,rh);ctx.fillStyle=C.accent;ctx.fillRect(0,y,3,rh)}
+  const cc={ETH:'#627eea',SOL:'#9945ff',BASE:'#0052ff',BSC:'#f3ba2f'};
+  ctx.fillStyle=cc[chain]||C.dim;ctx.beginPath();ctx.roundRect(12,y+8,32,20,3);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 8px Inter';ctx.fillText(chain,16,y+21);
+  ctx.fillStyle=C.white;ctx.font='bold 11px Inter';ctx.fillText(name,52,y+18);
+  ctx.fillStyle=C.text;ctx.font='11px JetBrains Mono';ctx.fillText(price,200,y+20);
+  const up=change.startsWith('+');ctx.fillStyle=up?C.green:C.red;ctx.font='bold 10px JetBrains Mono';ctx.fillText(change,320,y+20);
+  ctx.fillStyle=C.dim;ctx.font='10px JetBrains Mono';ctx.fillText(extra,430,y+20);
+  ctx.fillStyle='rgba(48,54,61,.3)';ctx.fillRect(10,y+rh-1,w-20,1);
+  return y+rh;
+}
+function drawChart(x,y,w,h,data,color){
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
+  const s=w/(data.length-1);data.forEach((v,i)=>{const px=x+i*s,py=y+h-(v*h);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py)});ctx.stroke();
+  const g=ctx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,color+'30');g.addColorStop(1,'transparent');
+  ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+}
+function drawMetric(x,y,label,value,color){
+  ctx.fillStyle=C.dim;ctx.font='9px Inter';ctx.fillText(label,x,y);
+  ctx.fillStyle=color||C.text;ctx.font='bold 13px JetBrains Mono';ctx.fillText(value,x,y+18);
+}
+function addLine(h){lines.push(h);term.innerHTML=lines.join('\n')+'\n<span class="t-prompt">$ </span><span class="cursor"></span>';term.scrollTop=term.scrollHeight}
+function addLines(arr,d=50){return new Promise(r=>{let i=0;const iv=setInterval(()=>{if(i<arr.length){addLine(arr[i]);i++}else{clearInterval(iv);r()}},d/speed)})}
+function addSS(label){ss++;document.getElementById('statSS').textContent=ss;
+  const t=document.createElement('div');t.className='ss-thumb captured';t.innerHTML=`<span class="ss-label">${label}</span>`;
+  const tc=document.createElement('canvas');tc.width=320;tc.height=200;tc.getContext('2d').drawImage(cv,0,0,320,200);t.insertBefore(tc,t.firstChild);
+  strip.appendChild(t);strip.scrollLeft=strip.scrollWidth;
+}
+function upd(){document.getElementById('statStep').textContent=`${step}/5`;document.getElementById('statActions').textContent=actions;document.getElementById('statCost').textContent=`$${cost.toFixed(2)}`}
+function wait(ms){return new Promise(r=>setTimeout(r,ms/speed))}
+function toggleSpeed(){const s=[1,2,4];const i=s.indexOf(speed);speed=s[(i+1)%3];document.getElementById('btnSpeed').textContent=`⚡ ${speed}x`}
+
+async function startDemo(){
+  if(running)return;running=true;
+  document.getElementById('btnStart').disabled=true;document.getElementById('btnStart').textContent='⏳ Researching...';
+  lines=[];elapsed=0;step=0;ss=0;actions=0;cost=0;
+  timer=setInterval(()=>{elapsed++;const m=Math.floor(elapsed/60),s=elapsed%60;document.getElementById('statTime').textContent=`${m}:${s.toString().padStart(2,'0')}`},1000);
+  document.getElementById('progressFill').style.width='0%';
+
+  // ─── STEP 1: DEXScreener ─────────────────────────────
+  step=1;upd();document.getElementById('progressFill').style.width='10%';
+  await addLines([
+    '<span class="t-accent">╔══════════════════════════════════════════════════════════╗</span>',
+    '<span class="t-accent">║</span> <span class="t-white">🔍 Coasty Crypto Due Diligence Agent</span>                   <span class="t-accent">║</span>',
+    '<span class="t-accent">║</span> <span class="t-dim">Research across live interfaces, gather evidence</span>         <span class="t-accent">║</span>',
+    '<span class="t-accent">╚══════════════════════════════════════════════════════════╝</span>',
+    '',
+    '<span class="t-prompt">$</span> <span class="t-cmd">python dd_agent.py "PEPE" --full</span>',
+    '',
+    '<span class="t-info">[12:00:00]</span> <span class="t-white">🔍 CRYPTO DUE DILIGENCE AGENT</span>',
+    '<span class="t-info">[12:00:01]</span> <span class="t-dim">🪙 Token: PEPE</span>',
+    '<span class="t-info">[12:00:01]</span> <span class="t-dim">📊 Depth: comprehensive (5 sources)</span>',
+    '<span class="t-info">[12:00:02]</span> <span class="t-accent">POST /v1/tasks</span> <span class="t-dim">→ Creating autonomous research task...</span>',
+    '<span class="t-info">[12:00:03]</span> <span class="t-success">✓ Task created:</span> <span class="t-white">run_dd_pepe_001</span>',
+    '',
+    '<span class="t-info">[12:00:04]</span> <span class="t-accent">📍 SOURCE 1/5:</span> <span class="t-white">DEXScreener — Market Data</span>',
+    '<span class="t-info">[12:00:04]</span> <span class="t-dim">  Action: navigate → dexscreener.com</span>',
+  ],70);
+  
+  document.getElementById('screenUrl').textContent='dexscreener.com';
+  await wait(800);
+  
+  // Draw DEXScreener
+  const a1=drawBrowser('DEX Screener','dexscreener.com');
+  let y=a1.y;
+  ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText('◆ DEX Screener',15,y+20);y+=35;
+  ctx.fillStyle=C.white;ctx.font='bold 16px Inter';ctx.fillText('PEPE / WETH',15,y+15);
+  ctx.fillStyle=C.green;ctx.font='bold 22px JetBrains Mono';ctx.fillText('$0.00001234',15,y+42);
+  ctx.fillStyle=C.green;ctx.font='bold 12px Inter';ctx.fillText('+45.2%',200,y+42);
+  y+=55;
+  drawMetric(15,y,'Volume 24h','$892M',C.white);drawMetric(130,y,'Liquidity','$45.2M',C.white);drawMetric(260,y,'Market Cap','$5.2B',C.white);drawMetric(400,y,'FDV','$5.2B',C.white);y+=35;
+  drawMetric(15,y,'Txns 24h','124,567',C.white);drawMetric(130,y,'Buys','78,234',C.green);drawMetric(260,y,'Sells','46,333',C.red);drawMetric(400,y,'Pair Created','2023-04-14',C.dim);y+=35;
+  ctx.fillStyle='#0a0f16';ctx.fillRect(0,y,cv.width/2,100);
+  const chartD=[];for(let i=0;i<50;i++)chartD.push(.3+Math.random()*.5+(i/50)*.2);
+  drawChart(10,y+10,cv.width/2-20,80,chartD,C.green);y+=110;
+  ctx.fillStyle=C.dim;ctx.font='9px Inter';ctx.fillText('BUY 62%',15,y);ctx.fillStyle=C.green;ctx.fillRect(60,y-8,120,12);
+  ctx.fillStyle=C.dim;ctx.font='9px Inter';ctx.fillText('SELL 38%',200,y);ctx.fillStyle=C.red;ctx.fillRect(250,y-8,75,12);
+
+  await addLines([
+    '<span class="t-info">[12:00:08]</span> <span class="t-success">✓ Page loaded</span>',
+    '<span class="t-info">[12:00:09]</span> <span class="t-dim">  Price: $0.00001234 | Vol: $892M | Liq: $45.2M</span>',
+    '<span class="t-info">[12:00:09]</span> <span class="t-dim">  MCap: $5.2B | Txns: 124,567 | Buys: 62%</span>',
+    '<span class="t-info">[12:00:10]</span> <span class="t-accent">📸 Evidence captured:</span> <span class="t-white">01_dexscreener.png</span>',
+  ],60);
+  addSS('01_dexscreener.png');actions+=3;cost+=.05;upd();await wait(800);
+
+  // ─── STEP 2: CoinGecko ───────────────────────────────
+  step=2;document.getElementById('progressFill').style.width='30%';upd();
+  await addLines([
+    '',
+    '<span class="t-info">[12:00:12]</span> <span class="t-accent">📍 SOURCE 2/5:</span> <span class="t-white">CoinGecko — Market Rankings</span>',
+    '<span class="t-info">[12:00:12]</span> <span class="t-dim">  Action: navigate → coingecko.com/en/coins/pepe</span>',
+  ],60);
+
+  document.getElementById('screenUrl').textContent='coingecko.com/en/coins/pepe';
+  await wait(1000);
+
+  const a2=drawBrowser('Pepe Price','coingecko.com/en/coins/pepe');
+  let y2=a2.y;
+  ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText('🦎 CoinGecko',15,y2+20);y2+=35;
+  ctx.fillStyle=C.white;ctx.font='bold 18px Inter';ctx.fillText('Pepe (PEPE)',15,y2+15);
+  ctx.fillStyle=C.green;ctx.font='bold 24px JetBrains Mono';ctx.fillText('$0.00001234',15,y2+45);
+  ctx.fillStyle=C.green;ctx.font='bold 14px Inter';ctx.fillText('+45.2% (24h)',250,y2+45);y2+=60;
+  ctx.fillStyle=C.dim;ctx.font='9px Inter';
+  const cgData=[
+    ['Market Cap Rank','#24','$5.2B'],
+    ['All-Time High','$0.00004457','May 5, 2024'],
+    ['All-Time Low','$0.0000000276','Apr 18, 2023'],
+    ['Circulating Supply','420.69T PEPE',''],
+    ['Max Supply','420.69T PEPE',''],
+  ];
+  cgData.forEach(r=>{
+    ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText(r[0],15,y2);
+    ctx.fillStyle=C.text;ctx.font='bold 11px JetBrains Mono';ctx.fillText(r[1],180,y2);
+    ctx.fillStyle=C.dim;ctx.font='10px JetBrains Mono';ctx.fillText(r[2],350,y2);y2+=22;
+  });
+  y2+=10;
+  const cgChart=[];for(let i=0;i<60;i++)cgChart.push(.2+Math.random()*.6+(i/60)*.15);
+  ctx.fillStyle='#0a0f16';ctx.fillRect(0,y2,cv.width/2,80);drawChart(10,y2+10,cv.width/2-20,60,cgChart,C.green);
+
+  await addLines([
+    '<span class="t-info">[12:00:16]</span> <span class="t-success">✓ CoinGecko data extracted</span>',
+    '<span class="t-info">[12:00:16]</span> <span class="t-dim">  Rank: #24 | ATH: $0.00004457 | Supply: 420.69T</span>',
+    '<span class="t-info">[12:00:17]</span> <span class="t-accent">📸 Evidence captured:</span> <span class="t-white">02_coingecko.png</span>',
+  ],60);
+  addSS('02_coingecko.png');actions+=2;cost+=.05;upd();await wait(800);
+
+  // ─── STEP 3: Etherscan ───────────────────────────────
+  step=3;document.getElementById('progressFill').style.width='50%';upd();
+  await addLines([
+    '',
+    '<span class="t-info">[12:00:19]</span> <span class="t-accent">📍 SOURCE 3/5:</span> <span class="t-white">Etherscan — Contract Analysis</span>',
+    '<span class="t-info">[12:00:19]</span> <span class="t-dim">  Action: navigate → etherscan.io/token/0x6982...</span>',
+  ],60);
+
+  document.getElementById('screenUrl').textContent='etherscan.io/token/0x6982...4a03';
+  await wait(1000);
+
+  const a3=drawBrowser('PEPE Token','etherscan.io/token/0x6982...4a03');
+  let y3=a3.y;
+  ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText('⟠ Etherscan',15,y3+20);y3+=35;
+  ctx.fillStyle=C.white;ctx.font='bold 14px Inter';ctx.fillText('Pepe (PEPE)',15,y3+12);y3+=25;
+  ctx.fillStyle=C.dim;ctx.font='9px JetBrains Mono';ctx.fillText('Contract: 0x6982508145454Ce325dDbE47a25d4ec3d2311933',15,y3);y3+=20;
+
+  const ethData=[
+    ['✓ Verified Contract','Yes — Source Code Available',C.green],
+    ['✓ Holders','324,567+',C.green],
+    ['✓ Honeypot Check','No issues detected',C.green],
+    ['⚠ Owner Address','Renounced',C.yellow],
+    ['✓ Token Standard','ERC-20',C.green],
+    ['✓ Decimals','18',C.green],
+    ['✓ Total Transfers','2.4M+',C.green],
+  ];
+  ethData.forEach(r=>{
+    ctx.fillStyle=r[2];ctx.font='bold 10px Inter';ctx.fillText(r[0],15,y3);
+    ctx.fillStyle=C.text;ctx.font='10px JetBrains Mono';ctx.fillText(r[1],180,y3);y3+=20;
+  });
+  y3+=10;
+  ctx.fillStyle='rgba(16,185,129,.1)';ctx.beginPath();ctx.roundRect(10,y3,cv.width/2-20,50,6);ctx.fill();
+  ctx.fillStyle=C.green;ctx.font='bold 12px Inter';ctx.fillText('✓ Contract Status: SAFE',20,y3+20);
+  ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText('No mint function | No blacklist | No pause | Renounced ownership',20,y3+38);
+
+  await addLines([
+    '<span class="t-info">[12:00:23]</span> <span class="t-success">✓ Contract analyzed</span>',
+    '<span class="t-info">[12:00:23]</span> <span class="t-dim">  Verified: ✓ | Holders: 324K+ | Honeypot: None</span>',
+    '<span class="t-info">[12:00:23]</span> <span class="t-dim">  Owner: Renounced | Mint: None | Blacklist: None</span>',
+    '<span class="t-info">[12:00:24]</span> <span class="t-accent">📸 Evidence captured:</span> <span class="t-white">03_etherscan.png</span>',
+  ],60);
+  addSS('03_etherscan.png');actions+=3;cost+=.05;upd();await wait(800);
+
+  // ─── STEP 4: Website ─────────────────────────────────
+  step=4;document.getElementById('progressFill').style.width='70%';upd();
+  await addLines([
+    '',
+    '<span class="t-info">[12:00:26]</span> <span class="t-accent">📍 SOURCE 4/5:</span> <span class="t-white">Project Website — Fundamentals</span>',
+    '<span class="t-info">[12:00:26]</span> <span class="t-dim">  Action: navigate → pepe.vip</span>',
+  ],60);
+
+  document.getElementById('screenUrl').textContent='pepe.vip';
+  await wait(1000);
+
+  const a4=drawBrowser('Pepe','pepe.vip');
+  let y4=a4.y;
+  ctx.fillStyle='#0a1628';ctx.fillRect(0,y4,cv.width/2,120);
+  ctx.fillStyle=C.green;ctx.font='bold 28px Inter';ctx.fillText('🐸 PEPE',20,y4+45);
+  ctx.fillStyle=C.dim;ctx.font='14px Inter';ctx.fillText('The most memeable memecoin in existence.',20,y4+75);
+  ctx.fillStyle=C.dim;ctx.font='11px Inter';ctx.fillText('The dogs have had their day, it\'s time for Pepe to take reign.',20,y4+100);y4+=130;
+
+  const webData=[
+    ['✓ Website','Live — pepe.vip',C.green],
+    ['⚠ Whitepaper','Not available (meme coin)',C.yellow],
+    ['⚠ Team','Anonymous / Community-driven',C.yellow],
+    ['✓ Roadmap','Community-driven development',C.green],
+    ['✓ Tokenomics','420.69T total supply, no tax',C.green],
+    ['✓ Contract Renounced','Yes',C.green],
+  ];
+  webData.forEach(r=>{
+    ctx.fillStyle=r[2];ctx.font='bold 10px Inter';ctx.fillText(r[0],15,y4);
+    ctx.fillStyle=C.text;ctx.font='10px JetBrains Mono';ctx.fillText(r[1],180,y4);y4+=22;
+  });
+
+  await addLines([
+    '<span class="t-info">[12:00:30]</span> <span class="t-success">✓ Website analyzed</span>',
+    '<span class="t-info">[12:00:30]</span> <span class="t-dim">  Team: Anonymous | Whitepaper: N/A (meme coin)</span>',
+    '<span class="t-info">[12:00:30]</span> <span class="t-dim">  Tokenomics: 420.69T supply, 0% tax, renounced</span>',
+    '<span class="t-info">[12:00:31]</span> <span class="t-accent">📸 Evidence captured:</span> <span class="t-white">04_website.png</span>',
+  ],60);
+  addSS('04_website.png');actions+=2;cost+=.05;upd();await wait(800);
+
+  // ─── STEP 5: Twitter ─────────────────────────────────
+  step=5;document.getElementById('progressFill').style.width='90%';upd();
+  await addLines([
+    '',
+    '<span class="t-info">[12:00:33]</span> <span class="t-accent">📍 SOURCE 5/5:</span> <span class="t-white">Twitter/X — Social Presence</span>',
+    '<span class="t-info">[12:00:33]</span> <span class="t-dim">  Action: navigate → x.com/pepecoin</span>',
+  ],60);
+
+  document.getElementById('screenUrl').textContent='x.com/pepecoin';
+  await wait(1000);
+
+  const a5=drawBrowser('Pepe (@pepecoin)','x.com/pepecoin');
+  let y5=a5.y;
+  ctx.fillStyle='#0a1628';ctx.fillRect(0,y5,cv.width/2,80);
+  ctx.fillStyle=C.white;ctx.font='bold 16px Inter';ctx.fillText('🐸 Pepe',15,y5+30);
+  ctx.fillStyle=C.dim;ctx.font='11px Inter';ctx.fillText('@pepecoin · The official PEPE token',15,y5+55);y5+=90;
+  drawMetric(15,y5,'Followers','385.2K',C.white);drawMetric(150,y5,'Following','127',C.white);drawMetric(280,y5,'Posts','4,521',C.white);y5+=35;
+  ctx.fillStyle=C.dim;ctx.font='10px Inter';ctx.fillText('Recent Activity:',15,y5);y5+=18;
+  const tweets=['🐸 PEPE just hit a new ATH! The community is growing fast.','📢 Partnership announcement coming soon... Stay tuned!','🎉 385K followers! Thank you PEPE fam! 🚀'];
+  tweets.forEach(t=>{
+    ctx.fillStyle='#111118';ctx.beginPath();ctx.roundRect(10,y5,cv.width/2-20,30,4);ctx.fill();
+    ctx.fillStyle=C.text;ctx.font='9px Inter';ctx.fillText(t.substring(0,60)+'...',20,y5+18);y5+=35;
+  });
+
+  await addLines([
+    '<span class="t-info">[12:00:37]</span> <span class="t-success">✓ Social data extracted</span>',
+    '<span class="t-info">[12:00:37]</span> <span class="t-dim">  Followers: 385.2K | Posts: 4,521 | Active community</span>',
+    '<span class="t-info">[12:00:38]</span> <span class="t-accent">📸 Evidence captured:</span> <span class="t-white">05_twitter.png</span>',
+  ],60);
+  addSS('05_twitter.png');actions+=2;cost+=.05;upd();await wait(800);
+
+  // ─── FINAL REPORT ────────────────────────────────────
+  document.getElementById('progressFill').style.width='100%';
+  await addLines([
+    '',
+    '<span class="t-info">[12:00:40]</span> <span class="t-accent">📊 COMPILING DD REPORT...</span>',
+    '<span class="t-info">[12:00:40]</span> <span class="t-dim">  Sources: 5/5 ✓</span>',
+    '<span class="t-info">[12:00:40]</span> <span class="t-dim">  Evidence: 5 screenshots captured</span>',
+    '<span class="t-info">[12:00:40]</span> <span class="t-dim">  Actions: 12 completed</span>',
+    '',
+    '<span class="t-info">[12:00:41]</span> <span class="t-success">✅ DD REPORT COMPLETE: PEPE</span>',
+    '',
+    '<span class="t-dim">╔══════════════════════════════════════════════════════════╗</span>',
+    '<span class="t-dim">║</span> <span class="t-white">📋 DUE DILIGENCE SUMMARY: PEPE</span>                          <span class="t-dim">║</span>',
+    '<span class="t-dim">╠══════════════════════════════════════════════════════════╣</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">📊 Market Data (DEXScreener)</span>                            <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Price: $0.00001234  |  24h: </span><span class="t-success">+45.2%</span>                    <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Volume: $892M  |  Liquidity: $45.2M  |  MCap: $5.2B</span>   <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">📈 Rankings (CoinGecko)</span>                                 <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Rank: #24  |  ATH: $0.00004457  |  Supply: 420.69T</span>    <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">🔒 Contract (Etherscan)</span>                                 <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  ✓ Verified  ✓ 324K+ holders  ✓ No honeypot</span>           <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  ✓ No mint  ✓ No blacklist  ✓ Renounced</span>               <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">🌐 Fundamentals (Website)</span>                               <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Team: Anonymous  |  Whitepaper: N/A (meme coin)</span>       <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Tax: 0%  |  Supply: 420.69T  |  Renounced: Yes</span>        <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">🐦 Community (Twitter/X)</span>                                <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-dim">  Followers: 385.2K  |  Posts: 4,521  |  Active: Yes</span>    <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-accent">🎯 Risk Assessment</span>                                      <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  Contract Safety:    ████████████░░  SAFE (8/10)</span>        <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-warn">  Team Transparency:  ██████░░░░░░░░  MODERATE (5/10)</span>    <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  Community Strength: ██████████░░░░  STRONG (8/10)</span>      <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  Liquidity:          ████████████░░  DEEP (9/10)</span>        <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span> <span class="t-success">  Overall Score:      █████████░░░░░  7.5/10</span>             <span class="t-dim">║</span>',
+    '<span class="t-dim">║</span>                                                          <span class="t-dim">║</span>',
+    '<span class="t-dim">╚══════════════════════════════════════════════════════════╝</span>',
+    '',
+    '<span class="t-info">[12:00:42]</span> <span class="t-dim">📄 Report saved:</span> <span class="t-white">dd_reports/DD_PEPE_20260802.md</span>',
+    '<span class="t-info">[12:00:42]</span> <span class="t-dim">📸 Evidence:</span> <span class="t-white">5 screenshots</span>',
+    '',
+    '<span class="t-dim">┌─ Run Stats ──────────────────────────────┐</span>',
+    '<span class="t-dim">│</span> <span class="t-info">⏱  Duration:</span>    <span class="t-white">42 seconds</span>              <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">📸 Evidence:</span>    <span class="t-white">5 screenshots</span>            <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">📍 Sources:</span>     <span class="t-white">5 live interfaces</span>        <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🎬 Actions:</span>     <span class="t-white">12</span>                       <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">💰 Cost:</span>        <span class="t-white">$0.25</span>                    <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🤖 Model:</span>       <span class="t-white">Coasty managed v5</span>       <span class="t-dim">│</span>',
+    '<span class="t-dim">│</span> <span class="t-info">🏆 OSWorld:</span>     <span class="t-green">85.60%</span>                   <span class="t-dim">│</span>',
+    '<span class="t-dim">└──────────────────────────────────────────┘</span>',
+    '',
+    '<span class="t-success">✨ Done!</span> <span class="t-dim">Research across live interfaces. Evidence gathered. Report compiled.</span>',
+    '<span class="t-dim">🔗 Built with Coasty Computer Use API — coasty.ai/docs</span>',
+  ],45);
+
+  // Show report
+  document.getElementById('reportContent').innerHTML=`<span class="a"># 🔍 Due Diligence Report: PEPE</span>
+<span class="g">Generated:</span> 2026-08-02 UTC | <span class="g">Agent:</span> Coasty Crypto DD Agent
+<span class="g">Sources:</span> 5 live interfaces | <span class="g">Evidence:</span> 5 screenshots
+
+<span class="a">## 📊 Market Data (DEXScreener)</span>
+  Price:       $0.00001234
+  24h Change:  <span class="g">+45.2%</span>
+  Volume 24h:  $892M
+  Liquidity:   $45.2M
+  Market Cap:  $5.2B
+  FDV:         $5.2B
+  Txns 24h:    124,567 (Buys: 62% / Sells: 38%)
+
+<span class="a">## 📈 Rankings (CoinGecko)</span>
+  Market Cap Rank: #24
+  All-Time High:   $0.00004457 (May 5, 2024)
+  All-Time Low:    $0.0000000276 (Apr 18, 2023)
+  Circulating:     420.69T PEPE
+  Max Supply:      420.69T PEPE
+
+<span class="a">## 🔒 Contract Analysis (Etherscan)</span>
+  Contract:    0x6982508145454Ce325dDbE47a25d4ec3d2311933
+  Verified:    <span class="g">✓ Yes</span>
+  Holders:     <span class="g">324,567+</span>
+  Honeypot:    <span class="g">None detected</span>
+  Mint:        <span class="g">None</span>
+  Blacklist:   <span class="g">None</span>
+  Ownership:   <span class="g">Renounced</span>
+  Standard:    ERC-20
+
+<span class="a">## 🌐 Fundamentals (Website)</span>
+  Website:     pepe.vip (Live)
+  Team:        <span class="y">Anonymous / Community-driven</span>
+  Whitepaper:  <span class="y">Not available (meme coin)</span>
+  Tax:         0%
+  Supply:      420.69T, no mint function
+
+<span class="a">## 🐦 Social Presence (Twitter/X)</span>
+  Followers:   385.2K
+  Posts:       4,521
+  Activity:    Active, regular updates
+  Community:   Strong engagement
+
+<span class="a">## 🎯 Risk Assessment</span>
+  Contract Safety:     <span class="g">████████████░░  8/10 SAFE</span>
+  Team Transparency:   <span class="y">██████░░░░░░░░  5/10 MODERATE</span>
+  Community Strength:  <span class="g">██████████░░░░  8/10 STRONG</span>
+  Liquidity Depth:     <span class="g">████████████░░  9/10 DEEP</span>
+
+<span class="a">## ⚖️ Overall Rating: 7.5/10</span>
+<span class="g">Strengths:</span> Deep liquidity, large community, verified contract, renounced ownership
+<span class="y">Weaknesses:</span> Anonymous team, no whitepaper, meme coin volatility
+
+<span class="a">## 📸 Evidence Captured</span>
+• 01_dexscreener.png — Market data & price chart
+• 02_coingecko.png   — Rankings & supply data
+• 03_etherscan.png   — Contract verification & safety
+• 04_website.png     — Project fundamentals
+• 05_twitter.png     — Community & social metrics
+
+<span class="a">## ⚠️ Disclaimer</span>
+This report is generated by an AI agent for research purposes only.
+Always DYOR (Do Your Own Research). This is NOT financial advice.
+
+<span class="g">Built with Coasty Computer Use API — coasty.ai/docs</span>
+Research across live interfaces. Gather evidence. Turn it into something useful.`;
+  document.getElementById('report').classList.add('visible');
+
+  clearInterval(timer);running=false;
+  document.getElementById('btnStart').textContent='✓ Complete';
+  document.getElementById('btnReset').disabled=false;
+}
+
+function resetDemo(){
+  running=false;if(timer)clearInterval(timer);
+  elapsed=0;step=0;ss=0;actions=0;cost=0;speed=1;lines=[];
+  term.innerHTML='<div><span class="t-comment"># Press ▶ Run DD to start the agent</span></div><div><br></div>';
+  clear();strip.innerHTML='';document.getElementById('report').classList.remove('visible');
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('screenUrl').textContent='about:blank';
+  document.getElementById('statStep').textContent='0/5';document.getElementById('statSS').textContent='0';
+  document.getElementById('statActions').textContent='0';document.getElementById('statCost').textContent='$0.00';
+  document.getElementById('statTime').textContent='0:00';
+  document.getElementById('btnStart').disabled=false;document.getElementById('btnStart').textContent='▶ Run DD on PEPE';
+  document.getElementById('btnReset').disabled=true;document.getElementById('btnSpeed').textContent='⚡ 1x';
+}
+</script>
+</body>
+</html>
